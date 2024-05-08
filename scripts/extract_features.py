@@ -31,6 +31,7 @@ def main():
             with open(args.csvdir,mode='a') as f:
                 json_line = json.dumps(features)
                 f.write(json_line+'\n')
+    
 
 if __name__ == "__main__":
     main()
