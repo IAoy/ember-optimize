@@ -35,13 +35,11 @@ def main():
     
     print(f"Total samples: {total_samples}, Train samples: {len(train_data)}, Test samples: {len(test_data)}")
     # 保存训练集
-    train_dir = os.path.join(args.outputpath, "train")
-    os.makedirs(train_dir, exist_ok=True)
     num_train_files = 6
     batch_size = math.ceil(len(train_data) / num_train_files)
     print("batch_size: ", batch_size)
     for i in range(num_train_files):
-        train_file_path = os.path.join(train_dir, f"train_features_{i}.jsonl")
+        train_file_path = os.path.join(args.outputpath, f"train_features_{i}.jsonl")
         save_jsonl(train_data[i*batch_size:(i+1)*batch_size], train_file_path)
     
     # 保存测试集
