@@ -8,6 +8,7 @@ import pandas as pd
 import lightgbm as lgb
 import multiprocessing
 from .features import PEFeatureExtractor
+from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import (roc_auc_score, make_scorer)
@@ -196,9 +197,14 @@ def optimize_model(data_dir):
 
     # each row in X_train appears in chronological order of "appeared"
     # so this works for progrssive time series splitting
-    progressive_cv = TimeSeriesSplit(n_splits=3).split(X_train)
+    # progressive_cv = TimeSeriesSplit(n_splits=3).split(X_train)
+    
+    # 定义 k 折交叉验证
+    progressive_cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
-    grid = GridSearchCV(estimator=model, cv=progressive_cv, param_grid=param_grid, scoring=score, n_jobs=1, verbose=3)
+    # grid = GridSearchCV(estimator=model, cv=progressive_cv, param_grid=param_grid, scoring=score, n_jobs=1, verbose=3)
+    # 增加并行工作的CPU数量
+    grid = GridSearchCV(estimator=model, cv=progressive_cv, param_grid=param_grid, scoring=score, n_jobs=16, verbose=3)
     grid.fit(X_train, y_train)
 
     return grid.best_params_
