@@ -37,12 +37,11 @@ def main():
             "objective": "binary",
             "num_iterations": 1000,
             "learning_rate": 0.05,
-            # 2048
             "num_leaves": 2048,
-            # 15
             "max_depth": 15,
             "min_data_in_leaf": 50,
-            "feature_fraction": 0.5
+            "feature_fraction": 0.5,
+            "metric": "auc"
         }
         if args.optimize:
             params = ember.optimize_model(args.datadir)
@@ -51,7 +50,7 @@ def main():
 
         print("Training LightGBM model")
         lgbm_model = ember.train_model(args.datadir, params, args.featureversion)
-        lgbm_model.save_model(os.path.join(args.datadir, "model.txt"))
+        lgbm_model.save_model(os.path.join(args.datadir, "modelafter.txt"))
 
 
 if __name__ == "__main__":

@@ -218,14 +218,19 @@ def train_model(data_dir, params={}, feature_version=2):
     params.update({"application": "binary"})
 
     # Read data
-    X_train, y_train = read_vectorized_features(data_dir, "train", feature_version)
-
+    # X_train, y_train = read_vectorized_features(data_dir, "train", feature_version)
+    X_train, y_train, X_test, y_test = read_vectorized_features(data_dir, None, feature_version)
+    
     # Filter unlabeled data
     train_rows = (y_train != -1)
 
     # Train
-    lgbm_dataset = lgb.Dataset(X_train[train_rows], y_train[train_rows])
-    lgbm_model = lgb.train(params, lgbm_dataset)
+    # lgbm_dataset = lgb.Dataset(X_train[train_rows], y_train[train_rows])
+    # 设置早停策略
+    callbacks = [lgb.early_stopping(5, first_metric_only=True, verbose=True)]
+    lgbm_train = lgb.Dataset(X_train[train_rows], y_train[train_rows])
+    lgbm_valid = lgb.Dataset(X_test, y_test, reference=lgbm_train)
+    lgbm_model = lgb.train(params, lgbm_train, valid_sets=[lgbm_train, lgbm_valid], verbose_eval=100,callbacks=callbacks)
 
     return lgbm_model
 

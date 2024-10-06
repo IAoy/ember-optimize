@@ -1,0 +1,9 @@
+malconv
+licenses
+resources
+LICENSE.txt
+README.md
+requirements_notebook.txt
+setup.py
+__pycache__/
+*.pyc
