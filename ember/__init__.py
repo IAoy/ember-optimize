@@ -44,22 +44,47 @@ def vectorize_unpack(args):
     """
     return vectorize(*args)
 
-
+# Remove multiprocessing code
 def vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows):
     """
     Vectorize a subset of data and write it to disk
     """
-    # Create space on disk to write features to
-    X = np.memmap(X_path, dtype=np.float32, mode="w+", shape=(nrows, extractor.dim))
-    y = np.memmap(y_path, dtype=np.float32, mode="w+", shape=nrows)
-    del X, y
+    print(f"Starting vectorize_subset with X_path={X_path}, y_path={y_path}, nrows={nrows}")
 
-    # Distribute the vectorization work
-    pool = multiprocessing.Pool()
-    argument_iterator = ((irow, raw_features_string, X_path, y_path, extractor, nrows)
-                         for irow, raw_features_string in enumerate(raw_feature_iterator(raw_feature_paths)))
-    for _ in tqdm.tqdm(pool.imap_unordered(vectorize_unpack, argument_iterator), total=nrows):
-        pass
+    # Create space on disk to write features to
+    try:
+        X = np.memmap(X_path, dtype=np.float32, mode="w+", shape=(nrows, extractor.dim))
+        y = np.memmap(y_path, dtype=np.float32, mode="w+", shape=nrows)
+        del X, y
+        print("Memmap files created successfully")
+
+        # Process the vectorization work sequentially
+        argument_iterator = ((irow, raw_features_string, X_path, y_path, extractor, nrows)
+                             for irow, raw_features_string in enumerate(raw_feature_iterator(raw_feature_paths)))
+        for args in tqdm.tqdm(argument_iterator, total=nrows):
+            vectorize_unpack(args)
+        print("Vectorization loop completed successfully")
+
+    except Exception as e:
+        print(f"Error in vectorize_subset: {e}")
+        raise
+
+
+# def vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows):
+#     """
+#     Vectorize a subset of data and write it to disk
+#     """
+#     # Create space on disk to write features to
+#     X = np.memmap(X_path, dtype=np.float32, mode="w+", shape=(nrows, extractor.dim))
+#     y = np.memmap(y_path, dtype=np.float32, mode="w+", shape=nrows)
+#     del X, y
+
+#     # Distribute the vectorization work
+#     pool = multiprocessing.Pool()
+#     argument_iterator = ((irow, raw_features_string, X_path, y_path, extractor, nrows)
+#                          for irow, raw_features_string in enumerate(raw_feature_iterator(raw_feature_paths)))
+#     for _ in tqdm.tqdm(pool.imap_unordered(vectorize_unpack, argument_iterator), total=nrows):
+#         pass
 
 
 def create_vectorized_features(data_dir, feature_version=2):
@@ -67,20 +92,21 @@ def create_vectorized_features(data_dir, feature_version=2):
     Create feature vectors from raw features and write them to disk
     """
     extractor = PEFeatureExtractor(feature_version)
+    if not (os.path.exists(os.path.join(data_dir, "X_train.dat")) and os.path.exists(os.path.join(data_dir, "y_train.dat"))):
+        print("Vectorizing training set")
+        X_path = os.path.join(data_dir, "X_train.dat")
+        y_path = os.path.join(data_dir, "y_train.dat")
+        raw_feature_paths = [os.path.join(data_dir, "train_features_{}.jsonl".format(i)) for i in range(6)]
+        nrows = sum([1 for fp in raw_feature_paths for line in open(fp)])
+        vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows)
 
-    print("Vectorizing training set")
-    X_path = os.path.join(data_dir, "X_train.dat")
-    y_path = os.path.join(data_dir, "y_train.dat")
-    raw_feature_paths = [os.path.join(data_dir, "train_features_{}.jsonl".format(i)) for i in range(6)]
-    nrows = sum([1 for fp in raw_feature_paths for line in open(fp)])
-    vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows)
-
-    print("Vectorizing test set")
-    X_path = os.path.join(data_dir, "X_test.dat")
-    y_path = os.path.join(data_dir, "y_test.dat")
-    raw_feature_paths = [os.path.join(data_dir, "test_features.jsonl")]
-    nrows = sum([1 for fp in raw_feature_paths for line in open(fp)])
-    vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows)
+    if not (os.path.join(data_dir, "X_test.dat") and os.path.exists(os.path.join(data_dir, "y_test.dat"))):
+        print("Vectorizing test set")
+        X_path = os.path.join(data_dir, "X_test.dat")
+        y_path = os.path.join(data_dir, "y_test.dat")
+        raw_feature_paths = [os.path.join(data_dir, "test_features.jsonl")]
+        nrows = sum([1 for fp in raw_feature_paths for line in open(fp)])
+        vectorize_subset(X_path, y_path, raw_feature_paths, extractor, nrows)
 
 
 def read_vectorized_features(data_dir, subset=None, feature_version=2):

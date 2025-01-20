@@ -99,3 +99,6 @@ def save_jsonl(data, file_path):
 
 if __name__ == "__main__":
     main()
+    print("数据集划分完毕")
+
+

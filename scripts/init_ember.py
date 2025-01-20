@@ -24,7 +24,10 @@ def main():
 
     X_train_path = os.path.join(args.datadir, "X_train.dat")
     y_train_path = os.path.join(args.datadir, "y_train.dat")
-    if not (os.path.exists(X_train_path) and os.path.exists(y_train_path)):
+    X_test_path = os.path.join(args.datadir, "X_test.dat")
+    y_test_path = os.path.join(args.datadir, "y_test.dat")
+    if not (os.path.exists(X_train_path) and os.path.exists(y_train_path)
+             and os.path.exists(X_test_path) and os.path.exists(y_test_path)):
         print("Creating vectorized features")
         ember.create_vectorized_features(args.datadir, args.featureversion)
         

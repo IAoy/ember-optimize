@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/test/test/liweihao/ember-optimize')
+sys.path.append('/media/liweihao/ember-optimize')
 from ember.features import PEFeatureExtractor
 import argparse
 import json
@@ -26,10 +26,10 @@ def main():
     # 根据-l的值动态设置jsonl和csv文件路径
     if args.label == 0:
         jsonl_path = os.path.join(args.outputdir, "benign.jsonl")
-        csv_path = os.path.join(args.outputdir, "benign.csv")
+        csv_path = os.path.join(args.outputdir, "benign_mapping.csv")
     elif args.label == 1:
         jsonl_path = os.path.join(args.outputdir, "malware.jsonl")
-        csv_path = os.path.join(args.outputdir, "malware.csv")
+        csv_path = os.path.join(args.outputdir, "malware_mapping.csv")
     
     extractor = PEFeatureExtractor(feature_version=args.featureversion)
     
@@ -48,6 +48,7 @@ def main():
                 if file.endswith('.csv') or file.endswith('.jsonl'):
                     continue
                 
+                print(f"Now is Processing file:{file}")
                 with open(os.path.join(root, file), mode='rb') as f:
                     features = extractor.raw_features(f.read())
                     features["label"] = args.label
